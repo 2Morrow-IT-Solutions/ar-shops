@@ -1,0 +1,76 @@
+[versions]
+agp = "8.3.0"
+kotlin = "1.9.0"
+coreKtx = "1.12.0"
+junit = "4.13.2"
+junitVersion = "1.1.5"
+espressoCore = "3.5.1"
+appcompat = "1.6.1"
+material = "1.11.0"
+sceneform_version = "1.23.0"
+location_version = "21.1.0"
+maps_version = "18.2.0"
+maps_utils_version = "0.2"
+activity = "1.8.0"
+constraintlayout = "2.1.4"
+hilt_version = "2.49"
+ksp_version = "1.9.22-1.0.16"
+retrofit_version = "2.9.0"
+okhttp_version = "4.12.0"
+lifecycle_process_version = "2.4.0"
+coroutines_version = "1.7.3"
+navigation_version = "2.7.7"
+glide_version = "4.16.0"
+
+[libraries]
+#Lifecycle-process
+lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycle_process_version" }
+
+#Glide
+glide-android = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide_version" }
+glide-compiler = { group = "com.github.bumptech.glide", name = "ksp", version.ref = "glide_version" }
+
+#Navigation
+navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigation_version" }
+navigation-ui = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigation_version" }
+
+#Dagger-Hilt
+hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt_version" }
+dagger-compiler = { group = "com.google.dagger", name = "dagger-compiler", version.ref = "hilt_version" }
+hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt_version" }
+
+#Location Services
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "location_version" }
+play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "maps_version" }
+maps-utils-ktx = { group = "com.google.maps.android", name = "maps-utils-ktx", version.ref = "maps_utils_version" }
+
+#Retrofit & Gson for handling JSON file parsing.
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit_version" }
+converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit_version" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp_version" }
+
+#SceneForm
+sceneform = { group = "com.gorisse.thomas.sceneform", name = "sceneform", version.ref = "sceneform_version" }
+
+#Coroutines
+coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines_version" }
+
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+
+[bundles]
+retrofit = ["retrofit", "converter-gson", "okhttp"]
+navigation = ["navigation-fragment", "navigation-ui"]
+
+[plugins]
+androidApplication = { id = "com.android.application", version.ref = "agp" }
+jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp_version" }
+com-google-dagger-hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt_version" }
+

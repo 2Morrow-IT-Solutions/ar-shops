@@ -18,7 +18,7 @@ import retrofit2.http.POST
 interface RestClient {
     @FormUrlEncoded
     @Headers("Content-Type: application/x-www-form-urlencoded")
-    @POST("/nearbyPlaces")
+    @POST("/backendTestnearbyPlaces")
     fun nearbyPlaces(
         @Field("lat") latitude: Double,
         @Field("lng") longitude: Double,

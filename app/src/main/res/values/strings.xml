@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">AR Shops</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="loading_user_location">Loading user location.</string>
+    <string name="loading_near_shops">Loading nearby shops.</string>
+    <string name="error_loading_shops">Error loading shops.</string>
+    <string name="try_again">Try again</string>
 </resources>

@@ -6,17 +6,30 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import com.tomorrowit.arshops.R
 import com.tomorrowit.arshops.databinding.ActivityShopsBinding
+import com.tomorrowit.arshops.presentation.shops.fragments.LoadingFragment
+import com.tomorrowit.arshops.presentation.shops.fragments.ShopsFragment
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.withContext
 
 private val TAG: String = ShopsActivity::class.java.simpleName
 
 @AndroidEntryPoint
 class ShopsActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var binding: ActivityShopsBinding
+
+    private val viewModel: ShopsViewModel by viewModels()
 
     //region Sensor
     lateinit var sensorManager: SensorManager
@@ -35,9 +48,39 @@ class ShopsActivity : AppCompatActivity(), SensorEventListener {
         sensorManager = this.getSystemService(SENSOR_SERVICE) as SensorManager
 
         supportFragmentManager.commit {
-            add(R.id.containerFragment, ShopsFragment())
+            add(R.id.containerFragment, LoadingFragment())
         }
         //sensorManager = getSystemService()!!
+    }
+
+    override fun onStart() {
+        super.onStart()
+        observeState()
+    }
+
+    private fun observeState() {
+        viewModel.state.flowWithLifecycle(lifecycle, Lifecycle.State.STARTED).onEach { state ->
+            when (state) {
+                is ShopState.SuccessShops -> {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            this@ShopsActivity,
+                            "Shops ready",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    withContext(Dispatchers.Main){
+                        supportFragmentManager.commit {
+                            replace(R.id.containerFragment, ShopsFragment(state.list))
+                        }
+                    }
+                }
+
+                else -> {
+
+                }
+            }
+        }.launchIn(lifecycleScope)
     }
 
     override fun onResume() {

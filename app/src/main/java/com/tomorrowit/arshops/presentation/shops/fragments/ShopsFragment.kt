@@ -1,4 +1,4 @@
-package com.tomorrowit.arshops.presentation.shops
+package com.tomorrowit.arshops.presentation.shops.fragments
 
 import android.os.Bundle
 import android.util.Log
@@ -32,6 +32,8 @@ import com.tomorrowit.arshops.databinding.FragmentShopsBinding
 import com.tomorrowit.arshops.model.NearbyStore
 import com.tomorrowit.arshops.model.PlaceNode
 import com.tomorrowit.arshops.model.getPositionVector
+import com.tomorrowit.arshops.presentation.shops.ShopsActivity
+import com.tomorrowit.arshops.presentation.shops.ShopsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
@@ -41,7 +43,9 @@ import kotlinx.coroutines.launch
 private val TAG: String = ShopsFragment::class.java.simpleName
 
 @AndroidEntryPoint
-class ShopsFragment : Fragment() {
+class ShopsFragment(
+    private val places: List<NearbyStore>
+) : Fragment() {
     private lateinit var binding: FragmentShopsBinding
     private val viewModel: ShopsViewModel by activityViewModels()
 
@@ -54,8 +58,6 @@ class ShopsFragment : Fragment() {
 
     private var anchorNode: AnchorNode? = null
 
-    private var places: List<NearbyStore>? = null
-
     //private var currentLocation: LatLng? = null
     private var currentLat: Double = 0.00
     private var currentLng: Double = 0.00
@@ -67,12 +69,8 @@ class ShopsFragment : Fragment() {
     //endregion
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ) = FragmentShopsBinding.inflate(inflater, container, false)
-        .apply { binding = this }
-        .root
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+    ) = FragmentShopsBinding.inflate(inflater, container, false).apply { binding = this }.root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -83,7 +81,7 @@ class ShopsFragment : Fragment() {
                 //config.planeFindingMode = Config.PlaneFindingMode.DISABLED
                 //config.geospatialMode = Config.GeospatialMode.ENABLED
             }
-            //setOnTapArPlaneListener(::onTapPlane)
+            setOnTapArPlaneListener(::onTapPlane)
         }
 
         lifecycleScope.launch(Dispatchers.Main) {
@@ -96,24 +94,22 @@ class ShopsFragment : Fragment() {
                 if (locationScene == null) {
                     // If our locationScene object hasn't been setup yet, this is a good time to do it
                     // We know that here, the AR components have been initiated.
-                    locationScene =
-                        LocationScene(this@ShopsFragment.requireActivity(), arSceneView)
+                    locationScene = LocationScene(this@ShopsFragment.requireActivity(), arSceneView)
 
-                    places?.forEach {
+                    places.forEach {
                         val layoutLocationMarker = LocationMarker(
                             it.locationlng.toDouble(), it.locationlat.toDouble(), getExampleView()
                         )
 
                         // An example "onRender" event, called every frame
                         // Updates the layout with the markers distance
-                        layoutLocationMarker.renderEvent =
-                            LocationNodeRender { node ->
-                                val eView: View = modelView!!.getView()
-                                eView.findViewById<TextView>(R.id.item_ar_shop_title).text = it.name
-                                eView.findViewById<TextView>(R.id.item_ar_shop_desc).text = it.type
-                                eView.findViewById<TextView>(R.id.item_ar_shop_distance)?.text =
-                                    node?.distance.toString() + "M"
-                            }
+                        layoutLocationMarker.renderEvent = LocationNodeRender { node ->
+                            val eView: View = modelView!!.getView()
+                            eView.findViewById<TextView>(R.id.item_ar_shop_title).text = it.name
+                            eView.findViewById<TextView>(R.id.item_ar_shop_desc).text = it.type
+                            eView.findViewById<TextView>(R.id.item_ar_shop_distance)?.text =
+                                node?.distance.toString() + "M"
+                        }
                         // Adding the marker
                         locationScene!!.mLocationMarkers.add(layoutLocationMarker)
                     }
@@ -151,7 +147,6 @@ class ShopsFragment : Fragment() {
         }
     }
 
-
     override fun onPause() {
         super.onPause()
         if (locationScene != null) {
@@ -166,51 +161,19 @@ class ShopsFragment : Fragment() {
     }
 
     private fun observeState() {
-        viewModel.state.flowWithLifecycle(lifecycle, Lifecycle.State.STARTED).onEach { state ->
-            when (state) {
-                ShopState.Init -> {
-
-                }
-
-                is ShopState.ErrorShops -> {
-                    Toast.makeText(
-                        this@ShopsFragment.requireContext(),
-                        "Failure loading locations",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-
-                is ShopState.SuccessShops -> {
-                    places = state.list
-                    Toast.makeText(
-                        this@ShopsFragment.requireContext(),
-                        "Success loading locations",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    hasFinishedLoading = true
-                }
-
-                is ShopState.UpdateLocation -> {
-                    currentLat = state.lat
-                    currentLng = state.lng
-                    Toast.makeText(
-                        this@ShopsFragment.requireContext(),
-                        "Location updated: ${state.lat} ${state.lng}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    Log.i(
-                        TAG,
-                        "Location updated: ${state.lat} ${state.lng}"
-                    )
-                }
-            }
-        }.launchIn(lifecycleScope)
+        viewModel.getLocationUpdates().flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
+            .onEach {
+                currentLat = it.latitude
+                currentLng = it.longitude
+                Log.i(
+                    TAG, "Location updated: ${currentLat} ${currentLng}"
+                )
+            }.launchIn(lifecycleScope)
     }
 
+
     private suspend fun loadModels() {
-        modelView = ViewRenderable.builder()
-            .setView(context, R.layout.item_ar_shop)
-            .await()
+        modelView = ViewRenderable.builder().setView(context, R.layout.item_ar_shop).await()
     }
 
     private fun getExampleView(): Node {
@@ -218,8 +181,7 @@ class ShopsFragment : Fragment() {
         base.setRenderable(modelView)
         modelView?.view?.setOnClickListener {
             Toast.makeText(
-                this@ShopsFragment.requireActivity(),
-                "Location marker touched.", Toast.LENGTH_SHORT
+                this@ShopsFragment.requireActivity(), "Location marker touched.", Toast.LENGTH_SHORT
             ).show()
             false
         }
@@ -238,19 +200,15 @@ class ShopsFragment : Fragment() {
         val orientationAngles = (requireActivity() as ShopsActivity).orientationAngles
         val sensorManager = (requireActivity() as ShopsActivity).sensorManager
 
-        if (places != null) {
-            for (place in places!!) {
-                val placeNode = PlaceNode(this.requireContext(), place)
-                placeNode.setParent(anchorNode)
-                placeNode.localPosition =
-                    place.getPositionVector(orientationAngles[0], LatLng(currentLat, currentLng))
-                placeNode.setOnTapListener { _, _ ->
-                    Toast.makeText(
-                        this@ShopsFragment.requireContext(),
-                        "Clicked on item",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+        for (place in places) {
+            val placeNode = PlaceNode(this.requireContext(), place)
+            placeNode.setParent(anchorNode)
+            placeNode.localPosition =
+                place.getPositionVector(orientationAngles[0], LatLng(currentLat, currentLng))
+            placeNode.setOnTapListener { _, _ ->
+                Toast.makeText(
+                    this@ShopsFragment.requireContext(), "Clicked on item", Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
